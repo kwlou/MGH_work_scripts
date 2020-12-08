@@ -42,12 +42,15 @@ def flair_and_ce(flair_file,ce_file,flair_area=20,save=True,outpath=None,FAC=Tru
         if roi == 1:
             area_of_interest=np.zeros(ce_roi.shape)
         else:
-            radius = math.ceil(flair_area / min([coronnal_slice_thickness,sagittal_slice_thickness,axial_slice_thickness])) # radius is used loosely here, there may be images where it is not equal distance per slide in every direction
+            radiusx = math.ceil(flair_area / coronnal_slice_thickness) # radius is used loosely here, there may be images where it is not equal distance per slide in every direction
+            radiusy = math.ceil(flair_area / sagittal_slice_thickness)
+            radiusz = math.ceil(flair_area / axial_slice_thickness)
             # might be a more efficient/faster way, i.e mask function using a pre-allocated sphere
             for i in range(len(x0)):
-                for x in range(x0[i]-radius, x0[i]+radius+1):
-                    for y in range(y0[i]-radius, y0[i]+radius+1):
-                        for z in range(z0[i]-radius, z0[i]+radius+1):
+
+                for x in range(x0[i]-radiusx, x0[i]+radiusx+1):
+                    for y in range(y0[i]-radiusy, y0[i]+radiusy+1):
+                        for z in range(z0[i]-radiusz, z0[i]+radiusz+1):
                             ''' deb: measures how far a coordinate in A is far from the center. 
                                     deb>=0: inside the sphere.
                                     deb<0: outside the sphere.'''   

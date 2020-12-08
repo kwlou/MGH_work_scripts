@@ -17,6 +17,7 @@ def run_wilcoxon(excelfile,excelfile2=None,outfile=None,scans=None,compared_stat
             if sheet.upper() not in ['METHODS','METHOD','METHODOLOGY']:
                 df[sheet.upper()] = pd.read_excel(excel,sheet)
                 df[sheet.upper()] = df[sheet.upper()].replace(np.nan,'',regex=True)
+                df[sheet.upper()] = df[sheet.upper()].iloc[:,:14]#12 for non SUV
                 #this is because this 13-482 had columns start in iloc3
                 # df[sheet.upper()].columns = list(df[sheet.upper()].iloc[1])
                 #
@@ -78,7 +79,9 @@ def run_wilcoxon(excelfile,excelfile2=None,outfile=None,scans=None,compared_stat
                 if feature in df[scan].columns:
                     for group in df_groupby:
                         for i in range(1,group[1].shape[0]):
-                            BL = group[1].iloc[0][feature]
+                            BL = group[1].iloc[0][feature]  
+                            if BL == '':
+                                BL = np.nan
                             EXP_VALUE = group[1].iloc[i][feature]
                             # assumes first row of each groupby is the baseline visit (VISIT_01)    
                             if type(BL) == str and '<' in BL:
@@ -89,7 +92,6 @@ def run_wilcoxon(excelfile,excelfile2=None,outfile=None,scans=None,compared_stat
                                 EXP_VALUE = float(EXP_VALUE[EXP_VALUE.find('0.'):]) - float('0.' + '0'*(numbers_past_decimal-1) + '1')
                             elif EXP_VALUE=='':
                                 continue
-
                             if group[1].iloc[i][paired_differentiator] not in paired_values[scan][feature].keys():
                                 paired_values[scan][feature][group[1].iloc[i][paired_differentiator]]=[]
                             paired_values[scan][feature][group[1].iloc[i][paired_differentiator]].extend([BL - EXP_VALUE])
@@ -97,6 +99,7 @@ def run_wilcoxon(excelfile,excelfile2=None,outfile=None,scans=None,compared_stat
                                 p_diff_values.append(group[1].iloc[i][paired_differentiator])
                     for v in paired_values[scan][feature].keys():
                         wilc_results[scan][feature][v] = (stats.wilcoxon(paired_values[scan][feature][v]), len(paired_values[scan][feature][v]))
+                        print(scan + ' ' + feature + ' ' + str(v) + ' ' + str(paired_values[scan][feature][v]))
             
 
     if outfile is None:
@@ -124,7 +127,7 @@ def run_wilcoxon(excelfile,excelfile2=None,outfile=None,scans=None,compared_stat
             f.write('\n')
         f.write("\n\n\n")
 
-run_wilcoxon('/home/kwlou/Data/HV_ROI_data_native_space.xlsx',outfile='/home/kwlou/Data/HV_ROI_data_native_space.txt',scans='all',pairing='patient',paired_differentiator='visit',compared_stat='median')
+run_wilcoxon('/home/kwl16/Data/FMS_CE_summary_stats.xlsx',outfile='/home/kwl16/Data/wilc_SUVpeak_FMS.txt',scans='SUV',pairing='subj,t#',paired_differentiator='visit',compared_stat='SUVpeak')
 
 
 # dicme={}

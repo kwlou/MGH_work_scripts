@@ -3,6 +3,7 @@ from glob import glob
 import os
 from subprocess import call
 from fnmatch import fnmatch
+from datetime import datetime, date
 
 #TODO add list functionality to this
 def files_to_list(basedir,files_of_interest,except_case=None):
@@ -18,3 +19,5 @@ def files_to_list(basedir,files_of_interest,except_case=None):
                 if fnmatch(name,files_of_interest):
                     yield os.path.join(root, name)
 
+def files_by_date(filelist):
+    return sorted(filelist,key=os.path.getctime)

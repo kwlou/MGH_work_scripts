@@ -4,6 +4,7 @@ import shutil
 import numpy as np
 import nibabel as nib
 from subprocess import call
+import ants
 
 #Function to compute affine registration between moving (low res scan) and fixed (high res scan that you are registering all other sequences to) volume
 def register_volume_slicer(moving_volume, fixed_volume, output_volume=None, transform_mode='useMomentsAlign', transform_type='Rigid,ScaleVersor3D,ScaleSkewVersor3D,Affine', interpolation_mode='BSpline', sampling_percentage=0.2, output_transform_filename=False, slicer_dir='/opt/Slicer-4.8.1-linux-amd64/Slicer'):
@@ -49,3 +50,84 @@ def resample_volume_using_reference(moving_volume, fixed_volume, output_volume=N
     call(' '.join(resample_scalar_volume_command), shell=True)
     #return created file names
     return output_filenames
+
+def register_volume_flirt(moving_volume,fixed_volume,output_volume=None):
+    if output_volume is None:
+        # ASSUMES that the path contains files where "-" seperates words
+        # TODO make it more generalizable for files without the expected "STUDY_##-VISIT_##-..."
+        output_volume = moving_volume.split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+    if os.path.isdir(output_volume):
+        output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+        if not os.path.basename(fixed_volume).split('-')[2:]:
+            output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[1:])
+
+    call('flirt -in ' + moving_volume + ' -ref ' + fixed_volume + ' -out ' + output_volume,shell=True)
+
+def register_volume_antspy(moving_volume,fixed_volume,output_prefix="",transform_mode='SyN',initial_transform=None):
+    ants.registration(ants.image_read(fixed_volume),ants.image_read(moving_volume),outprefix=output_prefix,verbose=True,typeoftransform=transform_mode,initial_transform=initial_transform)
+
+def register_transform_ants(moving_volume,fixed_volume,output_volume=None,out_transform='matrix',transform_mode1='Rigid[0.1]',transform_mode2='Affine[0.1]',mask1='',mask2='',initial_transform=None,dimensionality='3',flot='0',interpolation='Linear',convergence='[1000x500x250x1,1e-6,15]',smoothing_sigmas='3x2x1x0vox',shrink_factors='8x4x2x1',verbose='0'):
+    ANTs_directory = '/home/kwl16/Projects/MPRAGE_r_DSC_pipelinev9/Third_version_consolidated/ants_bin/'
+    # command = [ANTsDirectory 'antsRegistration ', ...
+#     '--dimensionality 3 ', ...
+#     '--float 0 ', ...
+#     '--output transform_', identifier, '_ ', ...
+#     '--interpolation Linear ', ...
+#     '--transform Rigid[0.1] ', ... 
+#     '--metric ', sprintf('MI[%s,%s,1,32,Regular,1]', fixedFilePath, movingFilePath), ' ', ...
+#     '--convergence [1000x500x250x1,1e-6,15] ', ...
+#     '--smoothing-sigmas 3x2x1x0vox ', ...
+#     '--shrink-factors 8x4x2x1 ', ...
+#     '--transform Affine[0.1] ', ... 
+#     '--metric ', sprintf('MI[%s,%s,1,32,Regular,1]', fixedFilePath, movingFilePath), ' ', ...
+#     '--convergence [1000x500x250x1,1e-6,15] ', ...
+#     '--smoothing-sigmas 3x2x1x0vox ', ...
+#     '--shrink-factors 8x4x2x1 ', ...
+#     '--masks [' mask1 ', ' mask2 '] ', ...
+# 	'--verbose 0']
+    call(ANTs_directory + 'antsRegistration'
+    ' --dimensionality ' + dimensionality + 
+    ' --float ' + flot + 
+    ' --output transform_' + out_transform + '_' + 
+    ' --interpolation ' + interpolation + 
+    ' --transform ' + transform_mode1 + 
+    ' --metric ' + 'MI[' +fixed_volume + ',' + moving_volume + ',1,32,Regular,1]' + 
+    ' --convergence ' + convergence + 
+    ' --smoothing-sigmas ' + smoothing_sigmas + 
+    ' --shrink-factors ' + shrink_factors + 
+    ' --transform ' + transform_mode2 + 
+    ' --metric ' + 'MI[' +fixed_volume + ',' + moving_volume + ',1,32,Regular,1]' + 
+    ' --convergence ' + convergence + 
+    ' --smoothing-sigmas ' + smoothing_sigmas + 
+    ' --shrink-factors ' + shrink_factors + 
+    ' --masks [' + mask1 + ', ' + mask2 + ']' + 
+    ' --verbose ' + verbose,shell=True)
+    if output_volume is None:
+        output_volume = moving_volume.split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+    if os.path.isdir(output_volume):
+        output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+        if not os.path.basename(fixed_volume).split('-')[2:]:
+            output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[1:])
+    shutil.move('transform_' + out_transform + '_0GenericAffine.mat',os.path.dirname(output_volume))
+    return os.path.dirname(output_volume) + '/' + 'transform_' + out_transform + '_0GenericAffine.mat'
+
+def register_volume_ants(moving_volume,fixed_volume,transformation,output_volume,dimensionality='3',interpolation='Linear',verbose='0'):
+    ANTs_directory = '/home/kwl16/Projects/MPRAGE_r_DSC_pipelinev9/Third_version_consolidated/ants_bin/'
+    
+    if output_volume is None:
+        output_volume = moving_volume.split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+    if os.path.isdir(output_volume):
+        output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
+        if not os.path.basename(fixed_volume).split('-')[2:]:
+            output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[1:])
+    call(ANTs_directory + 'antsApplyTransforms' + 
+    ' --dimensionality ' + dimensionality + 
+    ' --input ' + moving_volume + 
+    ' --reference-image ' + fixed_volume + 
+    ' --output ' + output_volume + 
+    ' --interpolation ' + interpolation +
+    ' --transform ' + transformation +
+    ' --verbose ' + verbose,
+    shell=True)
+
+# write function to apply trnasformation to the antsregistration apply

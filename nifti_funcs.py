@@ -16,7 +16,7 @@ def volume_from_nifti(nib_variable):
     voxel_count = np.count_nonzero(nib_variable.get_fdata())
     return voxel_volume*voxel_count
 
-def roi_overlay(roi,reference)):
+def roi_overlay(roi,reference):
     """
     takes 2 paths, or nib_variables, to overlay the roi on top of a reference image, returns resulting data 
     maybe implement returning nib object instead using nib.Nifti1Image()   
@@ -33,5 +33,26 @@ def roi_overlay(roi,reference)):
     # mask to remove all 1's in roi from reference image 
     reference_masked = np.ma.masked_array(reference_data,roi_data,fill_value=0).filled()
     return reference_masked
+
+def remove_slices(image,axis=2,n_low_cutoff=3,n_high_cutoff=3,output='_slices_cutoff'):
+    """
+    takes an image and removes slices from the axis of choice, so if the top or bottom of the axial is non-real data messing with registration
+    returns path to new_nib
+    """
+    image = nib.load(image)
+    image_data = image.get_fdata()
+    # doesnt work because you need to knowthe upper range, need some len of axis=x
+    # image_data = image_data.take(indices=range(3,20),axis=2)
+    slices = [slice(None)] * len(np.shape(image_data))
+    slices[axis] = slice(n_low_cutoff,-n_high_cutoff)
+    image_data = image_data[tuple(slices)]
+    new_image_nib = nib.Nifti1Image(image_data,image.affine,header=image.header)
+    output_path = image.split('.nii')[0]+output+image.split('.nii')[1:]
+    nib.save(output_path)
+    return output_path
+
+
+
+
         
     

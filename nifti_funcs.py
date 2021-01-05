@@ -3,7 +3,7 @@ import os
 import nibabel as nib
 from glob import glob
 import numpy as np
-
+from subprocess import call
 
 def volume_from_nifti(nib_variable):
     '''
@@ -34,25 +34,24 @@ def roi_overlay(roi,reference):
     reference_masked = np.ma.masked_array(reference_data,roi_data,fill_value=0).filled()
     return reference_masked
 
-def remove_slices(image,axis=2,n_low_cutoff=3,n_high_cutoff=3,output='_slices_cutoff'):
+def remove_slices(image,axis=2,n_low_cutoff=6,n_high_cutoff=6,output='_slices_cutoff'):
     """
     takes an image and removes slices from the axis of choice, so if the top or bottom of the axial is non-real data messing with registration
     returns path to new_nib
     """
-    image = nib.load(image)
-    image_data = image.get_fdata()
+    image_nib = nib.load(image)
+    image_data = image_nib.get_fdata()
     # doesnt work because you need to knowthe upper range, need some len of axis=x
     # image_data = image_data.take(indices=range(3,20),axis=2)
     slices = [slice(None)] * len(np.shape(image_data))
     slices[axis] = slice(n_low_cutoff,-n_high_cutoff)
     image_data = image_data[tuple(slices)]
-    new_image_nib = nib.Nifti1Image(image_data,image.affine,header=image.header)
-    output_path = image.split('.nii')[0]+output+image.split('.nii')[1:]
-    nib.save(output_path)
+    new_image_nib = nib.Nifti1Image(image_data,image_nib.affine,header=image_nib.header)
+    output_path = image.split('.nii')[0]+output+'.nii'+''.join(image.split('.nii')[1:])
+    nib.save(new_image_nib,output_path)
     return output_path
 
+def skullstripping_robex(image,output):
+    call('/home/kwl16/Projects/Carlsbad_Pipeline_docker/DeepMets/shared_software/ROBEX/runROBEX.sh ' + image + ' ' + output,shell=True)
 
 
-
-        
-    

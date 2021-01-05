@@ -89,7 +89,7 @@ def register_volume_flirt(moving_volume,fixed_volume,output_volume=None):
 def register_volume_antspy(moving_volume,fixed_volume,output_prefix="",transform_mode='SyN',initial_transform=None):
     ants.registration(ants.image_read(fixed_volume),ants.image_read(moving_volume),outprefix=output_prefix,verbose=True,typeoftransform=transform_mode,initial_transform=initial_transform)
 
-def register_make_transform_ants(moving_volume,fixed_volume,output_volume=None,out_transform='matrix',transform_mode1='Rigid[0.1]',transform_mode2='Affine[0.1]',mask1='',mask2='',initial_transform=None,dimensionality='3',flot='0',interpolation='Linear',convergence='[1000x500x250x1,1e-6,15]',smoothing_sigmas='3x2x1x0vox',shrink_factors='8x4x2x1',verbose='0'):
+def register_make_transform_ants(moving_volume,fixed_volume,output_volume=None,out_transform='matrix',transform_mode1='Rigid[0.1]',transform_mode2='Affine[0.1]',mask1='',mask2='',initial_transform=None,dimensionality='3',flot='0',interpolation='BSpline',convergence='[1000x500x250x1,1e-6,15]',smoothing_sigmas='3x2x1x0vox',shrink_factors='8x4x2x1',verbose='0'):
     ANTs_directory = '/home/kwl16/Projects/MPRAGE_r_DSC_pipelinev9/Third_version_consolidated/ants_bin/'
     # command = [ANTsDirectory 'antsRegistration ', ...
 #     '--dimensionality 3 ', ...
@@ -131,6 +131,8 @@ def register_make_transform_ants(moving_volume,fixed_volume,output_volume=None,o
         output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[2:])
         if not os.path.basename(fixed_volume).split('-')[2:]:
             output_volume = output_volume + '/' + os.path.basename(moving_volume).split('.nii')[0] + "_r_" + '-'.join(os.path.basename(fixed_volume).split('-')[1:])
+    if os.path.isfile(os.path.dirname(output_volume) + '/' + 'transform_' + out_transform + '_0GenericAffine.mat'):
+        os.remove(os.path.dirname(output_volume) + '/' + 'transform_' + out_transform + '_0GenericAffine.mat')
     shutil.move('transform_' + out_transform + '_0GenericAffine.mat',os.path.dirname(output_volume))
     return os.path.dirname(output_volume) + '/' + 'transform_' + out_transform + '_0GenericAffine.mat'
 

@@ -72,7 +72,7 @@ def resample_volume_using_reference(moving_volume, fixed_volume, output_volume=N
     resample_scalar_volume_command = [slicer_dir,'--launch', module_name, '"' + moving_volume + '" "' + output_volume + '"', '-i', interp_type, '-R', fixed_volume]
     call(' '.join(resample_scalar_volume_command), shell=True)
     #return created file names
-    return output_filenames
+    return output_volume
 
 def register_volume_flirt(moving_volume,fixed_volume,output_volume=None):
     if output_volume is None:

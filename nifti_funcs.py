@@ -16,7 +16,7 @@ def volume_from_nifti(nib_variable):
     voxel_count = np.count_nonzero(nib_variable.get_fdata())
     return voxel_volume*voxel_count
 
-def roi_overlay(roi,reference):
+def roi_overlay(roi,reference,fill_value=0):
     """
     takes 2 paths, or nib_variables, to overlay the roi on top of a reference image, returns resulting data 
     maybe implement returning nib object instead using nib.Nifti1Image()   
@@ -31,7 +31,7 @@ def roi_overlay(roi,reference):
     roi_data[np.nonzero(roi_data)] = 1
     roi_data = 1 - roi_data
     # mask to remove all 1's in roi from reference image 
-    reference_masked = np.ma.masked_array(reference_data,roi_data,fill_value=0).filled()
+    reference_masked = np.ma.masked_array(reference_data,roi_data,fill_value=fill_value).filled()
     return reference_masked
 
 def remove_slices(image,axis=2,n_low_cutoff=6,n_high_cutoff=6,output='_slices_cutoff'):
@@ -53,5 +53,12 @@ def remove_slices(image,axis=2,n_low_cutoff=6,n_high_cutoff=6,output='_slices_cu
 
 def skullstripping_robex(image,output):
     call('/home/kwl16/Projects/Carlsbad_Pipeline_docker/DeepMets/shared_software/ROBEX/runROBEX.sh ' + image + ' ' + output,shell=True)
+
+def skullstripping_fsl(image,output,fractional_intensity=0.5,gradient=0):
+    if type(fractional_intensity) != str:
+        fractional_intensity = str(fractional_intensity)
+    if type(gradient) != str:
+        gradient = str(gradient)
+    call('fsl5.0-bet2 ' + image + ' ' + output + ' -f ' + fractional_intensity + ' -g ' + gradient,shell=True)
 
 

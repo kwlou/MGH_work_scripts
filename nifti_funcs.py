@@ -18,15 +18,17 @@ def volume_from_nifti(nib_variable):
 
 def roi_overlay(roi,reference,fill_value=0):
     """
-    takes 2 paths, or nib_variables, to overlay the roi on top of a reference image, returns resulting data 
+    takes 2 paths, or nib_variables, or np.arrays, to overlay the roi on top of a reference image, returns resulting data 
     maybe implement returning nib object instead using nib.Nifti1Image()   
     """
-    if type(roi)==str:
+    if isinstance(roi,str):
         roi = nib.load(roi)
-    if type(reference)==str:
+    if isinstance(reference,str):
         reference = nib.load(reference)
-    roi_data = roi.get_fdata()
-    reference_data = reference.get_fdata()
+    if isinstance(roi,nib.nifti1.Nifti1Image):
+        roi_data = roi.get_fdata()
+    if isinstance(reference,nib.nifti1.Nifti1Image):
+        reference_data = reference.get_fdata()
     # set all non zero roi's to equal 0 and all 0's to equal 1 to represent mask
     roi_data[np.nonzero(roi_data)] = 1
     roi_data = 1 - roi_data

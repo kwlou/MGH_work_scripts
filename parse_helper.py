@@ -6,9 +6,12 @@ from fnmatch import fnmatch
 from datetime import datetime, date
 
 #TODO add list functionality to this
-def files_to_list(basedir,files_of_interest,except_case=None):
+def files_to_list(basedir,files_of_interest,subdir='',except_case=None):
     '''
-    expects a basedir and files_of_interest as strings, returns generator object containing the directory of the files of interest
+    expects a basedir and files_of_interest as strings or list of strings 
+    returns generator object containing the directory of the files of interest
+
+    optional input for subdirectory found within basedir - separated by some other directories
     '''
     if type(files_of_interest) == str:
         files_of_interest = [files_of_interest]
@@ -16,10 +19,10 @@ def files_to_list(basedir,files_of_interest,except_case=None):
         for name in files:
             for file_string in files_of_interest:
                 if except_case is not None:
-                    if fnmatch(name,file_string) and not any([fnmatch(i,except_case) for i in files]):
+                    if fnmatch(name,file_string) and subdir in root.split(basedir)[1] and not any([fnmatch(i,except_case) for i in files]):
                         yield os.path.join(root, name)
                 else:
-                    if fnmatch(name,file_string):
+                    if fnmatch(name,file_string) and subdir in root.split(basedir)[1]:
                         yield os.path.join(root, name)
 
 def folders_to_list(basedir,files_of_interest,except_case=None):

@@ -43,3 +43,16 @@ def folders_to_list(basedir,files_of_interest,except_case=None):
 
 def files_by_date(filelist):
     return sorted(filelist,key=os.path.getctime)
+
+def find_associated_roi(file_path,roi_dir):
+    """
+    finds the roi associated with the input file_path
+    assumes it shares the qtim file nomenclature with patient, visit, and file name delimited by -
+    """
+    patient = os.path.basename(file_path).split('-')[0]
+    visit = os.path.basename(file_path).split('-')[1]
+    roi = list(files_to_list(roi_dir, patient+'*'+visit+'*label_*'))
+    if not roi:
+        print('no roi for ' + file_path)
+        return
+    return roi[0]

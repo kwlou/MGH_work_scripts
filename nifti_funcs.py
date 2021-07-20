@@ -16,7 +16,7 @@ def volume_from_nifti(nib_variable):
     voxel_count = np.count_nonzero(nib_variable.get_fdata())
     return voxel_volume*voxel_count
 
-def roi_overlay(roi,reference,fill_value=0):
+def roi_overlay(reference,roi,fill_value=0):
     """
     takes 2 paths, or nib_variables, or np.arrays, to overlay the roi on top of a reference image, returns resulting data 
     maybe implement returning nib object instead using nib.Nifti1Image()   
@@ -39,6 +39,15 @@ def roi_overlay(roi,reference,fill_value=0):
     # mask to remove all 1's in roi from reference image 
     reference_masked = np.ma.masked_array(reference_data,roi_data,fill_value=fill_value).filled()
     return reference_masked
+
+def mask_compare(array_1,array_2,matching_nums=0):
+    """
+    Takes two arrays and finds where matching_nums values are mutual (the same)
+    returns an array of indicies of overlap
+    """
+    array_1_roi = array_1 == matching_nums
+    array_2_roi = array_2 == matching_nums
+    return np.logical_and(array_1_roi,array_2_roi)
 
 def remove_slices(image,axis=2,n_low_cutoff=6,n_high_cutoff=6,output='_slices_cutoff'):
     """

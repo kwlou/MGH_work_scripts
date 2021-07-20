@@ -30,7 +30,7 @@ def roi_overlay(reference,roi,fill_value=0):
     if isinstance(reference,nib.nifti1.Nifti1Image):
         reference_data = reference.get_fdata()
     if isinstance(roi,np.ndarray):
-        roi_data = roi
+        roi_data = np.copy(roi)
     if isinstance(reference,np.ndarray):
         reference_data = reference
     # set all non zero roi's to equal 0 and all 0's to equal 1 to represent mask
